@@ -1,29 +1,21 @@
 # DscBoard
 
-Class-3 DSC and USB token register for CA firms and DSC agents.
+Track Class-3 tokens before MCA or GST signing stops.
 
-Java 21 Spring Boot API + React (Vite) UI + PostgreSQL. Deploy on AWS ap-south-1 (Mumbai).
+Java 21 + Spring Boot + PostgreSQL + React. Mumbai region (ap-south-1).
 
-## Run
-
+## Local
 ```bash
 docker compose up --build
 ```
+Open http://localhost:8084
 
-Open http://localhost and create a workspace.
-
-Dev:
-
-```bash
-cd backend && mvn spring-boot:run
-cd frontend && npm install && npm run dev
-```
+## Production logs
+JSON-file docker logs, request id on every HTTP call, login events without passwords.
 
 ## AWS
-
 1. RDS PostgreSQL 16 in ap-south-1
-2. Ubuntu 22.04 EC2, ports 22/80/443
-3. Run aws/deploy-ec2-ap-south-1.sh
-4. Keep JWT_SECRET and DB password in environment. Data stays in India.
+2. Copy `.env.example` to `.env` and set secrets
+3. Run `aws/deploy-ec2-ap-south-1.sh`
 
 GitHub: https://github.com/shubhamsenudz/dscboard
