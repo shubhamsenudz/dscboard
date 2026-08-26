@@ -11,6 +11,18 @@ async function api(path, opts={}) {
   if(!text) return null;
   return JSON.parse(text);
 }
+function SettingsPage(){
+  const [form,setForm]=useState({name:"",city:"",phone:"",gstin:""});
+  const [msg,setMsg]=useState("");
+  useEffect(()=>{ api("/settings").then(s=>setForm({name:s.name||"",city:s.city||"",phone:s.phone||"",gstin:s.gstin||""})); },[]);
+  async function save(ev){ ev.preventDefault(); await api("/settings",{method:"PUT",body:JSON.stringify(form)}); setMsg("Saved."); }
+  return (<section className="card"><h2>Firm settings</h2><form className="grid-form" onSubmit={save}>
+    <label>Name<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} /></label>
+    <label>City<input value={form.city} onChange={e=>setForm({...form,city:e.target.value})} /></label>
+    <label>Phone<input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} /></label>
+    <label>GSTIN<input value={form.gstin} onChange={e=>setForm({...form,gstin:e.target.value})} /></label>
+    <button>Save settings</button></form>{msg && <p className="muted">{msg}</p>}</section>);
+}
 function HoldersPage(){
   const [rows,setRows]=useState([]);
   const [form,setForm]=useState({});
@@ -79,8 +91,10 @@ function Dashboard(){
     <section className="card">
       <h2>Renewal queue</h2>
       {rows.length===0 ? <div className="empty">No DSC expiring in 30 days. Add certificates with YYYY-MM-DD.</div> : (
-        <div className="table-wrap"><table><thead><tr><th>Flag</th><th>Holder</th><th>Serial</th><th>Portal</th><th>Expires</th><th>Days</th></tr></thead>
-        <tbody>{rows.map(r=><tr key={r.id}><td>{r.flag}</td><td>{r.holder}</td><td>{r.serialNo}</td><td>{r.portal}</td><td>{r.expiresOn}</td><td>{r.daysLeft}</td></tr>)}</tbody></table></div>
+        <div className="table-wrap"><table><thead><tr><th>Flag</th><th>Holder</th><th>Serial</th><th>Portal</th><th>Expires</th><th>Days</th><th></th></tr></thead>
+        <tbody>{rows.map(r=><tr key={r.id}><td>{r.flag}</td><td>{r.holder}</td><td>{r.serialNo}</td><td>{r.portal}</td><td>{r.expiresOn}</td><td>{r.daysLeft}</td>
+          <td>{r.waLink && <a className="wa" href={r.waLink} target="_blank" rel="noreferrer">WhatsApp</a>}
+            <button onClick={async()=>{await api("/work/renew/"+r.id,{method:"POST",body:"{}"}); location.reload();}}>Renew 2 years</button></td></tr>)}</tbody></table></div>
       )}
     </section>
   </div>);
@@ -125,6 +139,7 @@ export default function App(){
   let body = <Dashboard />;
   if(page==="holders") body = <HoldersPage />;
   if(page==="certificates") body = <CertificatesPage />;
+  if(page==="settings") body = <SettingsPage />;
   return (<div className="shell">
     <div className="top">
       <button type="button" className="burger" onClick={()=>setMenu(v=>!v)}>Menu</button>
@@ -137,6 +152,7 @@ export default function App(){
           <button className={page==="dashboard"?"active":""} onClick={()=>setPage("dashboard")}>Home</button>
           <button className={page==="holders"?"active":""} onClick={()=>setPage("holders")}>Holders</button>
           <button className={page==="certificates"?"active":""} onClick={()=>setPage("certificates")}>Certificates</button>
+          <button className={page==="settings"?"active":""} onClick={()=>setPage("settings")}>Settings</button>
       </nav>
       <main>{body}</main>
       <nav className="tabs">
