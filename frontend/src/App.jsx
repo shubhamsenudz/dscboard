@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 async function api(path, opts={}) {
   const token = localStorage.getItem("token");
-  const res = await fetch("/api"+path, { ...opts, headers: { "Content-Type":"application/json", ...(token?{Authorization:"Bearer "+token}:{}), ...(opts.headers||{}) } });
+  const res = await fetch((import.meta.env.VITE_API_URL||"")+"/api"+path, { ...opts, headers: { "Content-Type":"application/json", ...(token?{Authorization:"Bearer "+token}:{}), ...(opts.headers||{}) } });
   if(!res.ok) throw new Error(await res.text());
   const text = await res.text();
   if(!text) return null;
@@ -21,8 +21,8 @@ function HolderPage(){
         <label>phone<input value={form.phone ?? ""} onChange={ev => setForm({...form, phone: ev.target.value})} /></label>
       <button type="submit">Add</button>
     </form>
-    <table><thead><tr><th>name</th><th>pan</th><th>phone</th><th></th></tr></thead>
-    <tbody>{rows.map(row=><tr key={row.id}><td>{String(row.name ?? "")}</td><td>{String(row.pan ?? "")}</td><td>{String(row.phone ?? "")}</td><td><button className="link" onClick={()=>remove(row.id)}>Delete</button></td></tr>)}</tbody></table>
+    <div className="table-wrap"><table><thead><tr><th>name</th><th>pan</th><th>phone</th><th></th></tr></thead>
+    <tbody>{rows.map(row=><tr key={row.id}><td>{String(row.name ?? "")}</td><td>{String(row.pan ?? "")}</td><td>{String(row.phone ?? "")}</td><td><button className="link" onClick={()=>remove(row.id)}>Delete</button></td></tr>)}</tbody></table></div>
   </div>);
 }
 
@@ -43,8 +43,8 @@ function CertificatePage(){
         <label>portal<input value={form.portal ?? ""} onChange={ev => setForm({...form, portal: ev.target.value})} /></label>
       <button type="submit">Add</button>
     </form>
-    <table><thead><tr><th>holderId</th><th>serialNo</th><th>tokenSerial</th><th>dscClass</th><th>expiresOn</th><th>portal</th><th></th></tr></thead>
-    <tbody>{rows.map(row=><tr key={row.id}><td>{String(row.holderId ?? "")}</td><td>{String(row.serialNo ?? "")}</td><td>{String(row.tokenSerial ?? "")}</td><td>{String(row.dscClass ?? "")}</td><td>{String(row.expiresOn ?? "")}</td><td>{String(row.portal ?? "")}</td><td><button className="link" onClick={()=>remove(row.id)}>Delete</button></td></tr>)}</tbody></table>
+    <div className="table-wrap"><table><thead><tr><th>holderId</th><th>serialNo</th><th>tokenSerial</th><th>dscClass</th><th>expiresOn</th><th>portal</th><th></th></tr></thead>
+    <tbody>{rows.map(row=><tr key={row.id}><td>{String(row.holderId ?? "")}</td><td>{String(row.serialNo ?? "")}</td><td>{String(row.tokenSerial ?? "")}</td><td>{String(row.dscClass ?? "")}</td><td>{String(row.expiresOn ?? "")}</td><td>{String(row.portal ?? "")}</td><td><button className="link" onClick={()=>remove(row.id)}>Delete</button></td></tr>)}</tbody></table></div>
   </div>);
 }
 function Dashboard(){
@@ -61,6 +61,7 @@ function Dashboard(){
 }
 export default function App(){
   const [token,setToken]=useState(localStorage.getItem("token"));
+  const [menu,setMenu]=useState(false);
   const [page,setPage]=useState("dashboard");
   const [mode,setMode]=useState("login");
   const [form,setForm]=useState({tenantName:"",city:"Mumbai",fullName:"",email:"",password:""});
@@ -95,14 +96,20 @@ export default function App(){
   if(page==="holders") body = <HolderPage />;
   if(page==="certificates") body = <CertificatePage />;
   return (<div>
-    <div className="top"><div className="brand">DscBoard</div><button onClick={()=>{localStorage.removeItem("token"); setToken(null);}}>Log out</button></div>
+    <div className="top"><button type="button" className="burger" onClick={()=>setMenu(v=>!v)}>Menu</button><div className="brand">DscBoard</div><button onClick={()=>{localStorage.removeItem("token"); setToken(null);}}>Log out</button></div>
     <div className="layout">
-      <nav>
+      {menu && <button className="scrim" onClick={()=>setMenu(false)} />}
+      <nav className={"side"+(menu?" open":"")} onClick={()=>setMenu(false)}>
           <button className={page==="dashboard"?"active":""} onClick={()=>setPage("dashboard")}>Home</button>
           <button className={page==="holders"?"active":""} onClick={()=>setPage("holders")}>Holders</button>
           <button className={page==="certificates"?"active":""} onClick={()=>setPage("certificates")}>Certificates</button>
       </nav>
       <main>{body}</main>
+      <nav className="tabs">
+          <button className={page==="dashboard"?"active":""} onClick={()=>setPage("dashboard")}>Home</button>
+          <button className={page==="holders"?"active":""} onClick={()=>setPage("holders")}>Holders</button>
+          <button className={page==="certificates"?"active":""} onClick={()=>setPage("certificates")}>Certificates</button>
+      </nav>
     </div>
   </div>);
 }
