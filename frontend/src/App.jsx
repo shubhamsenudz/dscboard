@@ -62,23 +62,27 @@ function CertificatesPage(){
   </section>);
 }
 function Dashboard(){
-  const [data,setData]=useState(null);
-  const [counts,setCounts]=useState([]);
-  useEffect(()=>{
-    api("/dashboard").then(setData).catch(()=>{});
-    Promise.all([api("/holders"),api("/certificates")]).then(sets => setCounts(sets.map(x => (x||[]).length))).catch(()=>{});
-  },[]);
+  const [w,setW]=useState(null);
+  useEffect(()=>{ api("/work").then(setW).catch(()=>{}); },[]);
+  const rows=[...(w?.expired||[]).map(r=>({...r,flag:"Expired"})), ...(w?.expiring30||[]).map(r=>({...r,flag:"30 days"}))];
   return (<div>
     <div className="hero-panel">
-      <div className="kicker">For CA firms and DSC agents</div>
-      <h1>DscBoard</h1>
-      <p>{data?.tag || "Track Class-3 tokens before MCA or GST signing stops."}</p>
+      <div className="kicker">Today</div>
+      <h1>Tokens that will stop signing</h1>
+      <p>MCA and GST will reject expired Class-3 DSCs. Renew before the date.</p>
     </div>
     <div className="hero">
-      <div className="stat"><span>Workspace</span><b>{data?.tenant || "—"}</b></div>
-      <div className="stat"><span>Holders</span><b>{counts[0] ?? 0}</b></div>
-      <div className="stat"><span>Certificates</span><b>{counts[1] ?? 0}</b></div>
+      <div className="stat"><span>Alerts</span><b>{w?.alerts ?? 0}</b></div>
+      <div className="stat"><span>Expired</span><b>{(w?.expired||[]).length}</b></div>
+      <div className="stat"><span>Expiring</span><b>{(w?.expiring30||[]).length}</b></div>
     </div>
+    <section className="card">
+      <h2>Renewal queue</h2>
+      {rows.length===0 ? <div className="empty">No DSC expiring in 30 days. Add certificates with YYYY-MM-DD.</div> : (
+        <div className="table-wrap"><table><thead><tr><th>Flag</th><th>Holder</th><th>Serial</th><th>Portal</th><th>Expires</th><th>Days</th></tr></thead>
+        <tbody>{rows.map(r=><tr key={r.id}><td>{r.flag}</td><td>{r.holder}</td><td>{r.serialNo}</td><td>{r.portal}</td><td>{r.expiresOn}</td><td>{r.daysLeft}</td></tr>)}</tbody></table></div>
+      )}
+    </section>
   </div>);
 }
 export default function App(){
